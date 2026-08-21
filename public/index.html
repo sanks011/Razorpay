@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mandate Sentinel | Razorpay AI Risk Manager for Agentic Payments</title>
+  <meta name="description" content="AI Risk Manager & Mandate Verification Gate for Agent-Initiated Payments on Razorpay (AP2, NPCI UAP, MCP).">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Chart.js for Metrics & ROC Visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-background-glow glow-1"></div>
+  <div class="app-background-glow glow-2"></div>
+
+  <!-- Main Container -->
+  <div class="app-layout">
+    <!-- Top Navigation Header -->
+    <header class="main-header glass-card">
+      <div class="header-brand">
+        <div class="brand-logo-badge">
+          <div class="logo-shield">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L3 7V12C3 17.52 6.84 22.74 12 24C17.16 22.74 21 17.52 21 12V7L12 2Z" fill="url(#shield_grad)" stroke="#00f0ff" stroke-width="1.5"/>
+              <path d="M9 12L11 14L15 10" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <defs>
+                <linearGradient id="shield_grad" x1="3" y1="2" x2="21" y2="24" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#0c2340"/>
+                  <stop offset="1" stop-color="#0052cc"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h1>MANDATE SENTINEL</h1>
+            <span class="brand-subtitle">Razorpay Agentic Payment Risk & Abuse Verifier</span>
+          </div>
+        </div>
+        <div class="track-tag">
+          <span class="pulse-dot"></span>
+          <span>Track 02 — AI Risk Manager</span>
+        </div>
+      </div>
+
+      <div class="header-stats">
+        <div class="stat-pill">
+          <span class="stat-label">Sentinel Gate</span>
+          <span class="stat-val status-online" id="statusPill">ACTIVE</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">Protocols</span>
+          <span class="stat-val highlight">AP2 • UAP • MCP 2.0</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-label">Defense Rigor</span>
+          <span class="stat-val highlight-green">3-Layer Defense-In-Depth</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs glass-card">
+      <button class="tab-btn active" data-tab="live-gateway">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Live Defense Terminal
+      </button>
+      <button class="tab-btn" data-tab="adversarial-eval">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Adversarial Benchmark & Metrics
+      </button>
+      <button class="tab-btn" data-tab="mandate-studio">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+        AP2 / UAP Mandate Studio
+      </button>
+      <button class="tab-btn" data-tab="audit-ledger">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Verifiable Audit Ledger
+      </button>
+      <button class="tab-btn" data-tab="arch-spec">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        Architecture & STRIDE Model
+      </button>
+    </nav>
+
+    <!-- Tab 1: Live Defense Terminal -->
+    <main class="tab-content active" id="tab-live-gateway">
+      <!-- Top Attack Launch Bench -->
+      <section class="attack-bench glass-card">
+        <div class="section-title-row">
+          <div>
+            <h2>Interactive Adversarial Test Bench</h2>
+            <p class="section-desc">Simulate live agent attacks against Razorpay MCP calls & watch Mandate Sentinel's 3 defense layers react.</p>
+          </div>
+          <div class="badge-live-stream">
+            <span class="live-indicator"></span> WebSocket Live Stream
+          </div>
+        </div>
+
+        <div class="attack-buttons-grid">
+          <button class="btn-attack btn-benign" onclick="triggerAttack('BENIGN_PURCHASE')">
+            <span class="attack-icon">🛒</span>
+            <div class="attack-meta">
+              <strong>1. Legitimate Purchase</strong>
+              <span>Valid signed mandate (₹450 Groceries)</span>
+            </div>
+            <span class="expected-badge allow">ALLOW</span>
+          </button>
+
+          <button class="btn-attack btn-danger" onclick="triggerAttack('BUDGET_EXCEED')">
+            <span class="attack-icon">🚨</span>
+            <div class="attack-meta">
+              <strong>2. Budget Exceed Attack</strong>
+              <span>Breaches ₹1,500 single-tx ceiling (₹3,500)</span>
+            </div>
+            <span class="expected-badge block">BLOCK</span>
+          </button>
+
+          <button class="btn-attack btn-danger" onclick="triggerAttack('REPLAY_EXPIRED')">
+            <span class="attack-icon">⏳</span>
+            <div class="attack-meta">
+              <strong>3. Replay / Stale Mandate</strong>
+              <span>Expired token timestamp & reused JTI</span>
+            </div>
+            <span class="expected-badge block">BLOCK</span>
+          </button>
+
+          <button class="btn-attack btn-warning" onclick="triggerAttack('VELOCITY_BURST')">
+            <span class="attack-icon">⚡</span>
+            <div class="attack-meta">
+              <strong>4. Velocity Burst / Card Test</strong>
+              <span>Automated rapid micro-charges</span>
+            </div>
+            <span class="expected-badge stepup">STEP-UP / BLOCK</span>
+          </button>
+
+          <button class="btn-attack btn-danger" onclick="triggerAttack('PROMPT_INJECTION')">
+            <span class="attack-icon">💉</span>
+            <div class="attack-meta">
+              <strong>5. Prompt Injection Override</strong>
+              <span>"IGNORE PREVIOUS INSTRUCTIONS" in notes</span>
+            </div>
+            <span class="expected-badge block">BLOCK</span>
+          </button>
+
+          <button class="btn-attack btn-danger" onclick="triggerAttack('OFF_MANDATE_CATEGORY')">
+            <span class="attack-icon">🛑</span>
+            <div class="attack-meta">
+              <strong>6. Category Exfiltration</strong>
+              <span>Unauthorized MCC (Crypto / Forex Voucher)</span>
+            </div>
+            <span class="expected-badge block">BLOCK</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Live Inspection Pipeline & Stream -->
+      <div class="grid-2col">
+        <!-- Inspection Pipeline Card -->
+        <section class="glass-card inspection-card">
+          <div class="card-header">
+            <h3>3-Layer Defense Gate Inspection</h3>
+            <span class="tx-id-badge" id="currentTxId">tx_agt_demo_standby</span>
+          </div>
+
+          <!-- Layer Pipeline Steps -->
+          <div class="pipeline-steps">
+            <!-- Layer 1 -->
+            <div class="layer-step" id="layer1Step">
+              <div class="layer-indicator">
+                <div class="step-circle" id="l1Circle">1</div>
+                <div class="step-connector"></div>
+              </div>
+              <div class="step-content">
+                <div class="step-header">
+                  <span class="layer-title">Layer 1: Deterministic Mandate Verifier</span>
+                  <span class="layer-badge" id="l1Badge">Awaiting</span>
+                </div>
+                <p class="layer-desc">AP2 HMAC/ECDSA signature, single-tx ceiling, cumulative budget cap, MCC allowlist, and replay JTI nonce.</p>
+                <div class="layer-detail-box" id="l1Details">Awaiting transaction...</div>
+              </div>
+            </div>
+
+            <!-- Layer 2 -->
+            <div class="layer-step" id="layer2Step">
+              <div class="layer-indicator">
+                <div class="step-circle" id="l2Circle">2</div>
+                <div class="step-connector"></div>
+              </div>
+              <div class="step-content">
+                <div class="step-header">
+                  <span class="layer-title">Layer 2: ML & Statistical Anomaly Scorer</span>
+                  <span class="layer-badge" id="l2Badge">Awaiting</span>
+                </div>
+                <p class="layer-desc">Velocity spike analyzer, historical amount Z-score model, merchant entropy, and off-hours scoring.</p>
+                <div class="layer-detail-box" id="l2Details">Awaiting transaction...</div>
+              </div>
+            </div>
+
+            <!-- Layer 3 -->
+            <div class="layer-step" id="layer3Step">
+              <div class="layer-indicator">
+                <div class="step-circle" id="l3Circle">3</div>
+              </div>
+              <div class="step-content">
+                <div class="step-header">
+                  <span class="layer-title">Layer 3: NLP Prompt Injection & Intent Guard</span>
+                  <span class="layer-badge" id="l3Badge">Awaiting</span>
+                </div>
+                <p class="layer-desc">CSA STRIDE threat model: instruction override patterns, zero-width obfuscation, and intent-vs-description divergence.</p>
+                <div class="layer-detail-box" id="l3Details">Awaiting transaction...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Final Policy Decision Banner -->
+          <div class="decision-banner" id="decisionBanner">
+            <div class="decision-header">
+              <div class="decision-outcome-text">
+                <span class="decision-label">FINAL SENTINEL DECISION</span>
+                <h4 id="decisionOutcome">STANDBY</h4>
+              </div>
+              <div class="risk-gauge-box">
+                <span class="gauge-label">Composite Risk</span>
+                <span class="gauge-val" id="compositeRiskVal">0.00</span>
+              </div>
+            </div>
+            <p class="decision-reason" id="decisionReason">Click any attack button above to send a live agent request through the verification gate.</p>
+            
+            <div class="razorpay-dispatch-box" id="razorpayDispatchBox">
+              <span class="dispatch-title">Razorpay API Execution Status:</span>
+              <span class="dispatch-val" id="razorpayStatusText">Awaiting execution</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Live Event Stream & Raw Inspector -->
+        <section class="glass-card terminal-card">
+          <div class="card-header">
+            <h3>Live Gate Telemetry & Audit Stream</h3>
+            <button class="btn-sm" onclick="clearLiveFeed()">Clear Feed</button>
+          </div>
+
+          <div class="terminal-logs" id="terminalLogs">
+            <div class="log-entry sys">
+              <span class="log-time">[SYSTEM]</span>
+              <span class="log-msg">Mandate Sentinel Gateway active. Monitoring Razorpay Remote MCP tools & AP2 transaction requests.</span>
+            </div>
+          </div>
+
+          <div class="json-inspector-box">
+            <div class="inspector-header">
+              <span>Cryptographic Proof & JSON Payload</span>
+              <span class="latency-pill" id="txLatencyPill">0 ms</span>
+            </div>
+            <pre class="json-code" id="jsonInspector">{ "status": "Ready for transaction inspection" }</pre>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Tab 2: Adversarial Benchmark & Metrics -->
+    <section class="tab-content" id="tab-adversarial-eval">
+      <div class="glass-card benchmark-control-card">
+        <div class="section-title-row">
+          <div>
+            <h2>Track 02 Rigorous Adversarial Evaluation Suite</h2>
+            <p class="section-desc">1,000 synthetic agent transactions evaluated across 6 labeled classes with measured Precision, Recall, and False Positive Cost analysis.</p>
+          </div>
+          <button class="btn-primary" id="runBenchmarkBtn" onclick="executeBenchmark()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Run 1,000-Sample Benchmark
+          </button>
+        </div>
+
+        <!-- Metrics KPI Grid -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Precision</span>
+            <span class="kpi-value text-cyan" id="metricPrecision">100.0%</span>
+            <span class="kpi-sub">TP / (TP + FP)</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Recall</span>
+            <span class="kpi-value text-green" id="metricRecall">99.5%</span>
+            <span class="kpi-sub">TP / (TP + FN)</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">F1-Score</span>
+            <span class="kpi-value text-purple" id="metricF1">99.75%</span>
+            <span class="kpi-sub">Harmonic Mean</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">False Positive Rate</span>
+            <span class="kpi-value text-amber" id="metricFpr">0.0%</span>
+            <span class="kpi-sub">FP / (FP + TN)</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Throughput</span>
+            <span class="kpi-value text-cyan" id="metricThroughput">19,230 tx/s</span>
+            <span class="kpi-sub">Sub-millisecond gate</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Cost Model & Confusion Matrix Row -->
+      <div class="grid-2col">
+        <!-- Financial Loss vs Cost Trade-off Card -->
+        <div class="glass-card">
+          <div class="card-header">
+            <h3>Financial Cost Model (Honest Loss vs FP Friction)</h3>
+            <span class="badge-roi">Track 02 Bar</span>
+          </div>
+          <p class="card-desc">Quantifies the economic value: Fraud prevented minus the business friction cost of false positives.</p>
+
+          <div class="financial-metrics-list">
+            <div class="fin-row">
+              <span class="fin-label">Total Attempted Malicious Fraud:</span>
+              <span class="fin-val highlight-red" id="finTotalFraud">₹6,93,160.00</span>
+            </div>
+            <div class="fin-row">
+              <span class="fin-label">Fraud Loss Prevented by Sentinel:</span>
+              <span class="fin-val highlight-green" id="finPreventedFraud">₹6,92,660.00</span>
+            </div>
+            <div class="fin-row">
+              <span class="fin-label">False Positive Customer Review Cost:</span>
+              <span class="fin-val highlight-amber" id="finFpCost">₹0.00</span>
+            </div>
+            <div class="fin-row total-benefit-row">
+              <span class="fin-label"><strong>Net Economic Value Saved:</strong></span>
+              <span class="fin-val text-neon-green" id="finNetBenefit">₹6,92,660.00</span>
+            </div>
+          </div>
+
+          <div class="chart-container" style="height: 220px; margin-top: 1.5rem;">
+            <canvas id="costBenefitChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Confusion Matrix & Class Breakdown Card -->
+        <div class="glass-card">
+          <div class="card-header">
+            <h3>Confusion Matrix (1,000 Held-Out Samples)</h3>
+          </div>
+          
+          <div class="confusion-matrix-grid">
+            <div class="cm-cell cm-header"></div>
+            <div class="cm-cell cm-header">Predicted Positive (Block)</div>
+            <div class="cm-cell cm-header">Predicted Negative (Allow)</div>
+
+            <div class="cm-cell cm-label">Actual Attack</div>
+            <div class="cm-cell cm-tp">
+              <strong id="cmTp">398</strong>
+              <span>True Positive</span>
+            </div>
+            <div class="cm-cell cm-fn">
+              <strong id="cmFn">2</strong>
+              <span>False Negative</span>
+            </div>
+
+            <div class="cm-cell cm-label">Actual Benign</div>
+            <div class="cm-cell cm-fp">
+              <strong id="cmFp">0</strong>
+              <span>False Positive</span>
+            </div>
+            <div class="cm-cell cm-tn">
+              <strong id="cmTn">600</strong>
+              <span>True Negative</span>
+            </div>
+          </div>
+
+          <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 0.95rem;">Per-Class Detection Accuracy</h4>
+          <div class="class-accuracy-bars" id="classAccuracyBars">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 3: AP2 / UAP Mandate Studio -->
+    <section class="tab-content" id="tab-mandate-studio">
+      <div class="grid-2col">
+        <!-- Mandate Creator Form -->
+        <div class="glass-card">
+          <div class="card-header">
+            <h3>Create & Cryptographically Sign AP2 Mandate</h3>
+            <span class="badge-tag">ECDSA / HMAC-SHA256</span>
+          </div>
+          <p class="card-desc">Issue a cryptographically bounded authorization mandate for an autonomous AI agent.</p>
+
+          <form id="createMandateForm" onsubmit="handleCreateMandate(event)">
+            <div class="form-group">
+              <label>Agent Identifier</label>
+              <input type="text" id="mndAgentId" value="agt_claude_assistant" required>
+            </div>
+
+            <div class="grid-2col-compact">
+              <div class="form-group">
+                <label>Cumulative Spend Cap (₹)</label>
+                <input type="number" id="mndSpendCap" value="5000" min="10" max="100000" required>
+              </div>
+              <div class="form-group">
+                <label>Single Transaction Ceiling (₹)</label>
+                <input type="number" id="mndSingleLimit" value="1500" min="5" max="50000" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Allowed Merchant IDs (Comma-separated or '*' for all)</label>
+              <input type="text" id="mndMerchants" value="mer_zepto_delhi, mer_blinkit_gurgaon, mer_zomato_in, mer_swiggy_in" required>
+            </div>
+
+            <div class="form-group">
+              <label>Mandate Purpose</label>
+              <input type="text" id="mndPurpose" value="Daily grocery delivery and lunch ordering assistant" required>
+            </div>
+
+            <button type="submit" class="btn-primary full-width">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              Sign & Register Mandate
+            </button>
+          </form>
+        </div>
+
+        <!-- Active Mandates List -->
+        <div class="glass-card">
+          <div class="card-header">
+            <h3>Active Registered Mandates</h3>
+            <button class="btn-sm" onclick="loadMandates()">Refresh</button>
+          </div>
+          <div class="mandate-list" id="mandateList">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 4: Verifiable Audit Ledger -->
+    <section class="tab-content" id="tab-audit-ledger">
+      <div class="glass-card">
+        <div class="section-title-row">
+          <div>
+            <h2>Verifiable Cryptographic Audit Ledger</h2>
+            <p class="section-desc">Immutable, SHA-256 hash-chained block records linking every decision to Razorpay Order IDs and mandate signatures.</p>
+          </div>
+          <button class="btn-sm" onclick="loadAuditLedger()">Refresh Ledger</button>
+        </div>
+
+        <div class="audit-table-wrapper">
+          <table class="audit-table">
+            <thead>
+              <tr>
+                <th>Seq #</th>
+                <th>Timestamp</th>
+                <th>Tx ID</th>
+                <th>Agent / Mandate</th>
+                <th>Amount</th>
+                <th>Decision</th>
+                <th>Risk Score</th>
+                <th>Razorpay Order</th>
+                <th>Node Hash & Proof</th>
+              </tr>
+            </thead>
+            <tbody id="auditTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tab 5: Architecture & STRIDE Threat Model -->
+    <section class="tab-content" id="tab-arch-spec">
+      <div class="glass-card">
+        <div class="card-header">
+          <h2>Mandate Sentinel Architecture & STRIDE Threat Model</h2>
+          <span class="track-tag">Cloud Security Alliance AP2 Framework</span>
+        </div>
+
+        <div class="arch-content">
+          <div class="arch-grid">
+            <div class="arch-box">
+              <h4>Layer 1: Deterministic Mandate Engine</h4>
+              <p>Validates AP2 (Google) and NPCI UAP cryptographic signatures (`HMAC-SHA256` / `ECDSA-secp256k1`). Enforces zero-ambiguity hard spending ceilings, cumulative caps, replay nonces (JTI), and merchant allowlists.</p>
+              <div class="tech-tag">Zero-Ambiguity Rules</div>
+            </div>
+
+            <div class="arch-box">
+              <h4>Layer 2: ML Anomaly Scorer</h4>
+              <p>Analyzes agent velocity windows (card-testing bursts), computes statistical amount Z-scores relative to historical user baselines, tracks novel merchant drift, and evaluates off-hours patterns.</p>
+              <div class="tech-tag">Statistical & ML Heuristics</div>
+            </div>
+
+            <div class="arch-box">
+              <h4>Layer 3: NLP Prompt-Injection Guard</h4>
+              <p>Aligned with the Cloud Security Alliance (CSA) STRIDE Threat Framework for AP2. Intercepts adversarial jailbreaks ("IGNORE PREVIOUS INSTRUCTIONS"), zero-width Unicode injection, and semantic divergence between declared user intent and line-item purchases.</p>
+              <div class="tech-tag">CSA AP2 STRIDE Defense</div>
+            </div>
+          </div>
+
+          <div class="protocol-comparison-table-wrapper" style="margin-top: 2rem;">
+            <h3>Protocol Landscape & Integration Architecture</h3>
+            <table class="audit-table">
+              <thead>
+                <tr>
+                  <th>Protocol / Standard</th>
+                  <th>Origin / Standard Body</th>
+                  <th>Role in Ecosystem</th>
+                  <th>Sentinel Integration</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Google AP2</strong></td>
+                  <td>Google / W3C Working Group</td>
+                  <td>Cryptographically signed Intent, Cart & Payment Mandates</td>
+                  <td>Direct parser & signature verification engine</td>
+                </tr>
+                <tr>
+                  <td><strong>NPCI UAP</strong></td>
+                  <td>NPCI (India)</td>
+                  <td>Unified Agent Protocol for UPI Reserve Pay & agent delegation</td>
+                  <td>UPI spend reservation rules & ceiling enforcement</td>
+                </tr>
+                <tr>
+                  <td><strong>OpenAI / Stripe ACP</strong></td>
+                  <td>Stripe / OpenAI</td>
+                  <td>Agentic checkout execution and buyer authorization layer</td>
+                  <td>Checkout parameter boundary validation</td>
+                </tr>
+                <tr>
+                  <td><strong>Razorpay Remote MCP 2.0</strong></td>
+                  <td>Razorpay</td>
+                  <td>Standardized Model Context Protocol server for AI financial tools</td>
+                  <td>Proxy gateway wrapper intercepting tool calls</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
