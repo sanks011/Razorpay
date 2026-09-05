@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 1. Tab Navigation
 function setupTabs() {
-  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabBtns = document.querySelectorAll('.skeuo-tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
 
   tabBtns.forEach(btn => {
@@ -49,13 +49,14 @@ function initWebSocket() {
   try {
     ws = new WebSocket(wsUrl);
   } catch (err) {
-    console.warn('[WS] Fallback to polling mode:', err);
+    console.warn('[WS] Fallback mode:', err);
     return;
   }
 
   ws.onopen = () => {
-    logTerminal('sys', 'Connected to Mandate Sentinel WebSocket Telemetry Server.');
-    document.getElementById('statusPill').textContent = 'ONLINE';
+    logTerminal('sys', 'Connected to Mandate Sentinel Telemetry Bus.');
+    const statusText = document.getElementById('systemStatusText');
+    if (statusText) statusText.textContent = 'ARMED & ACTIVE';
   };
 
   ws.onmessage = (event) => {
@@ -73,14 +74,15 @@ function initWebSocket() {
   };
 
   ws.onclose = () => {
-    document.getElementById('statusPill').textContent = 'RECONNECTING';
+    const statusText = document.getElementById('systemStatusText');
+    if (statusText) statusText.textContent = 'RECONNECTING BUS';
     setTimeout(initWebSocket, 3000);
   };
 }
 
 // 3. Trigger Adversarial Attack / Benign Purchase Simulation
 async function triggerAttack(attackType) {
-  logTerminal('sys', `Dispatching agent request [${attackType}] through Mandate Sentinel Gate...`);
+  logTerminal('sys', `INJECTING PAYLOAD [${attackType}] INTO GATE BUS...`);
   resetPipelineUI();
 
   try {
@@ -100,8 +102,14 @@ async function triggerAttack(attackType) {
 
 // 4. Render 3-Layer Inspection Pipeline in UI
 function renderTransactionInspection(tx) {
-  document.getElementById('currentTxId').textContent = tx.tx_id || 'tx_unknown';
-  document.getElementById('txLatencyPill').textContent = `${tx.latency_ms || 1} ms`;
+  const txIdEl = document.getElementById('currentTxId');
+  if (txIdEl) txIdEl.textContent = tx.tx_id || 'STANDBY_BUS_READY';
+
+  const latencyVal = `${tx.latency_ms || 1.1} ms`;
+  const latencyPill = document.getElementById('txLatencyPill');
+  if (latencyPill) latencyPill.textContent = latencyVal;
+  const headerLatency = document.getElementById('headerLatencyVal');
+  if (headerLatency) headerLatency.textContent = latencyVal;
 
   // Layer 1
   const l1 = tx.inspection?.layer1;
@@ -110,12 +118,12 @@ function renderTransactionInspection(tx) {
   const l1Details = document.getElementById('l1Details');
 
   if (l1) {
-    l1Circle.className = `step-circle ${l1.passed ? 'pass' : 'fail'}`;
-    l1Badge.className = `layer-badge ${l1.passed ? 'pass' : 'fail'}`;
+    l1Circle.className = `rail-circle ${l1.passed ? 'pass' : 'fail'}`;
+    l1Badge.className = `layer-stamp ${l1.passed ? 'pass' : 'fail'}`;
     l1Badge.textContent = l1.passed ? 'PASSED' : 'VIOLATION';
     l1Details.textContent = l1.passed
-      ? `✓ Sig verified • Cap ₹${(l1.details.remaining_budget_paise/100).toFixed(0)} remaining • Merchant & MCC authorized`
-      : `✗ ${l1.violations.join('; ')}`;
+      ? `[VERIFIED] Signature valid | Cap: INR ${(l1.details.remaining_budget_paise/100).toFixed(0)} remaining | Merchant & MCC authorized`
+      : `[VIOLATION] ${l1.violations.join('; ')}`;
   }
 
   // Layer 2
@@ -126,12 +134,12 @@ function renderTransactionInspection(tx) {
 
   if (l2) {
     const l2Pass = !l2.anomaly_detected;
-    l2Circle.className = `step-circle ${l2Pass ? 'pass' : 'fail'}`;
-    l2Badge.className = `layer-badge ${l2Pass ? 'pass' : 'fail'}`;
-    l2Badge.textContent = `Risk: ${l2.ml_risk_score}`;
+    l2Circle.className = `rail-circle ${l2Pass ? 'pass' : 'fail'}`;
+    l2Badge.className = `layer-stamp ${l2Pass ? 'pass' : 'fail'}`;
+    l2Badge.textContent = `RISK: ${l2.ml_risk_score}`;
     l2Details.textContent = l2Pass
-      ? `✓ Normal velocity (${l2.sub_scores.velocity_score}) • Z-Score: ${l2.sub_scores.amount_z_score} • Known merchant`
-      : `✗ Anomalous: ${l2.risk_factors.join('; ') || 'High composite drift'}`;
+      ? `[NOMINAL] Velocity score: ${l2.sub_scores.velocity_score} | Z-Score: ${l2.sub_scores.amount_z_score} | Known merchant pattern`
+      : `[ANOMALY] ${l2.risk_factors.join('; ') || 'High statistical drift detected'}`;
   }
 
   // Layer 3
@@ -141,63 +149,72 @@ function renderTransactionInspection(tx) {
   const l3Details = document.getElementById('l3Details');
 
   if (l3) {
-    l3Circle.className = `step-circle ${l3.passed ? 'pass' : 'fail'}`;
-    l3Badge.className = `layer-badge ${l3.passed ? 'pass' : 'fail'}`;
+    l3Circle.className = `rail-circle ${l3.passed ? 'pass' : 'fail'}`;
+    l3Badge.className = `layer-stamp ${l3.passed ? 'pass' : 'fail'}`;
     l3Badge.textContent = l3.passed ? 'CLEAN' : 'TAMPERED';
     l3Details.textContent = l3.passed
-      ? `✓ No instruction overrides detected • Semantic purpose alignment verified`
-      : `✗ STRIDE Threat Detected: ${l3.detected_signatures.join('; ')}`;
+      ? `[CLEAR] Zero adversarial injection patterns | Semantic intent aligned`
+      : `[STRIDE THREAT] ${l3.detected_signatures.join('; ')}`;
   }
 
-  // Decision Banner
+  // Master Decision Bezel
   const banner = document.getElementById('decisionBanner');
   const outcomeText = document.getElementById('decisionOutcome');
   const compositeVal = document.getElementById('compositeRiskVal');
   const reasonText = document.getElementById('decisionReason');
   const dispatchText = document.getElementById('razorpayStatusText');
+  const meterFill = document.getElementById('meterFill');
 
   outcomeText.textContent = tx.outcome;
   compositeVal.textContent = tx.composite_risk_score.toFixed(4);
   reasonText.textContent = tx.decision_reason;
 
-  banner.className = `decision-banner ${tx.outcome.toLowerCase()}`;
+  if (meterFill) {
+    const fillPct = Math.min(100, Math.max(0, tx.composite_risk_score * 100));
+    meterFill.style.width = `${fillPct}%`;
+  }
+
+  const bannerClass = tx.outcome === 'ALLOW' ? 'allow' : tx.outcome === 'STEP_UP' ? 'warn' : 'block';
+  banner.className = `master-decision-bezel ${bannerClass}`;
 
   if (tx.outcome === 'ALLOW' && tx.razorpay_order) {
-    dispatchText.innerHTML = `Order Dispatched: <strong style="color:#00f59b">${tx.razorpay_order.id}</strong> (Status: ${tx.razorpay_order.status}) • Link: <a href="${tx.razorpay_order.short_url || '#'}" target="_blank" style="color:#00f0ff">Hosted Razorpay Checkout</a>`;
+    dispatchText.innerHTML = `Order Executed: <strong>${tx.razorpay_order.id}</strong> (Status: ${tx.razorpay_order.status}) &bull; <a href="${tx.razorpay_order.short_url || '#'}" target="_blank" style="color:#0284c7; text-decoration:underline;">Razorpay Checkout</a>`;
   } else if (tx.outcome === 'STEP_UP') {
-    dispatchText.innerHTML = `<span style="color:#ffaa00">Razorpay API call paused. User Biometric/OTP Step-Up challenge dispatched.</span>`;
+    dispatchText.innerHTML = `<span style="color:#d97706; font-weight:600;">Razorpay API paused. Stepped-up to user biometric challenge.</span>`;
   } else {
-    dispatchText.innerHTML = `<span style="color:#ff3366">Razorpay API dispatch blocked. Rogue agent transaction isolated & dropped.</span>`;
+    dispatchText.innerHTML = `<span style="color:#dc2626; font-weight:600;">Razorpay API blocked. Malicious transaction quarantined &amp; dropped.</span>`;
   }
 
   // JSON Raw Inspector
   document.getElementById('jsonInspector').textContent = JSON.stringify(tx, null, 2);
 
   // Append to terminal
-  const logClass = tx.outcome.toLowerCase();
-  logTerminal(logClass, `[${tx.outcome}] ${tx.tx_id} | Risk: ${tx.composite_risk_score} | ${tx.decision_reason.slice(0, 75)}...`);
+  const logClass = tx.outcome === 'ALLOW' ? 'allow' : tx.outcome === 'STEP_UP' ? 'warn' : 'block';
+  logTerminal(logClass, `[${tx.outcome}] ${tx.tx_id} | Risk: ${tx.composite_risk_score} | ${tx.decision_reason.slice(0, 80)}`);
 }
 
 function resetPipelineUI() {
-  document.getElementById('l1Circle').className = 'step-circle';
-  document.getElementById('l2Circle').className = 'step-circle';
-  document.getElementById('l3Circle').className = 'step-circle';
-  document.getElementById('l1Badge').textContent = 'Evaluating...';
-  document.getElementById('l2Badge').textContent = 'Evaluating...';
-  document.getElementById('l3Badge').textContent = 'Evaluating...';
+  document.getElementById('l1Circle').className = 'rail-circle';
+  document.getElementById('l2Circle').className = 'rail-circle';
+  document.getElementById('l3Circle').className = 'rail-circle';
+  document.getElementById('l1Badge').textContent = 'EVALUATING';
+  document.getElementById('l2Badge').textContent = 'EVALUATING';
+  document.getElementById('l3Badge').textContent = 'EVALUATING';
 }
 
 function logTerminal(type, message) {
   const logs = document.getElementById('terminalLogs');
+  if (!logs) return;
   const entry = document.createElement('div');
-  entry.className = `log-entry ${type}`;
+  entry.className = `log-line ${type}`;
   const time = new Date().toLocaleTimeString();
-  entry.innerHTML = `<span class="log-time">[${time}]</span><span class="log-msg">${escapeHtml(message)}</span>`;
+  entry.innerHTML = `<span class="log-timestamp">[${time}]</span><span class="log-msg">${escapeHtml(message)}</span>`;
   logs.prepend(entry);
 }
 
 function clearLiveFeed() {
-  document.getElementById('terminalLogs').innerHTML = '';
+  const logs = document.getElementById('terminalLogs');
+  if (logs) logs.innerHTML = '';
 }
 
 // 5. AP2 Mandate Studio
@@ -206,27 +223,31 @@ async function loadMandates() {
     const res = await fetch('/api/mandates');
     const data = await res.json();
     const list = document.getElementById('mandateList');
+    if (!list) return;
     list.innerHTML = '';
 
     if (data.mandates && data.mandates.length > 0) {
       data.mandates.forEach(item => {
         const m = item.mandate;
         const card = document.createElement('div');
-        card.className = 'mandate-card';
+        card.className = 'mandate-tactile-card';
         card.innerHTML = `
-          <div class="mandate-header">
-            <span class="mnd-id">${m.mandate_id}</span>
-            <span class="mnd-status">${item.status}</span>
+          <div class="mandate-card-head">
+            <span class="mandate-id-etched">${m.mandate_id}</span>
+            <span class="tactile-pill pill-allow">${item.status}</span>
           </div>
-          <div class="mnd-budget-bar">
-            <span>Spend Cap: <strong>₹${(m.spend_cap_paise/100).toFixed(2)}</strong></span>
-            <span>Single Limit: <strong>₹${(m.single_tx_limit_paise/100).toFixed(2)}</strong></span>
-            <span>Spent: <strong>₹${(item.spent_paise/100).toFixed(2)}</strong></span>
+          <div class="mandate-metrics-chips">
+            <span class="metric-chip">Cap: <strong>INR ${(m.spend_cap_paise/100).toFixed(0)}</strong></span>
+            <span class="metric-chip">Limit: <strong>INR ${(m.single_tx_limit_paise/100).toFixed(0)}</strong></span>
+            <span class="metric-chip">Spent: <strong>INR ${(item.spent_paise/100).toFixed(0)}</strong></span>
+            <span class="metric-chip">Agent: <strong>${m.agent_id}</strong></span>
           </div>
-          <div style="font-size:0.72rem; color:#94a3b8;">
-            Agent: <strong>${m.agent_id}</strong> • Purpose: ${m.purpose}
+          <div style="font-size:0.73rem; color:var(--ink-secondary); margin-top:0.4rem;">
+            Purpose: ${m.purpose}
           </div>
-          <div class="mnd-sig">HMAC-SHA256 Sig: ${item.signature}</div>
+          <div style="margin-top:0.4rem; font-family:var(--mono); font-size:0.65rem; color:var(--ink-faint); word-break:break-all;">
+            HMAC Signature: ${item.signature}
+          </div>
         `;
         list.appendChild(card);
       });
@@ -258,41 +279,40 @@ async function handleCreateMandate(event) {
     });
     const data = await res.json();
     if (data.success) {
-      logTerminal('sys', `New AP2 Mandate registered: ${data.mandate.mandate.mandate_id}`);
+      logTerminal('sys', `AP2 Mandate Token Issued: ${data.mandate.mandate.mandate_id}`);
       loadMandates();
-      alert(`Mandate ${data.mandate.mandate.mandate_id} signed and activated!`);
+      alert(`Mandate Token ${data.mandate.mandate.mandate_id} cryptographically signed & active.`);
     }
   } catch (err) {
     alert(`Failed to create mandate: ${err.message}`);
   }
 }
 
-// 6. Verifiable Audit Ledger
+// 6. Verifiable Cryptographic Audit Ledger
 async function loadAuditLedger() {
   try {
     const res = await fetch('/api/audit-ledger?limit=30');
     const data = await res.json();
     const tbody = document.getElementById('auditTableBody');
+    if (!tbody) return;
     tbody.innerHTML = '';
 
     if (data.ledger && data.ledger.length > 0) {
       data.ledger.forEach(entry => {
         const row = document.createElement('tr');
-        const outcomeClass = entry.outcome === 'ALLOW' ? 'highlight-green' : entry.outcome === 'STEP_UP' ? 'highlight-amber' : 'highlight-red';
-        const orderText = entry.razorpay_result?.order_id || 'None (Blocked)';
+        const outcomeTag = entry.outcome === 'ALLOW' ? 'pill-allow' : entry.outcome === 'STEP_UP' ? 'pill-stepup' : 'pill-block';
+        const orderText = entry.razorpay_result?.order_id || 'Quarantined';
 
         row.innerHTML = `
           <td><strong>#${entry.sequence}</strong></td>
-          <td style="font-size:0.7rem;">${new Date(entry.timestamp).toLocaleTimeString()}</td>
-          <td style="font-family:var(--font-mono); color:var(--neon-cyan);">${entry.tx_id}</td>
+          <td class="mono">${new Date(entry.timestamp).toLocaleTimeString()}</td>
+          <td class="mono">${entry.tx_id}</td>
           <td>${entry.mandate_id}</td>
-          <td>₹${(entry.amount_paise/100).toFixed(2)}</td>
-          <td><span class="${outcomeClass}" style="font-weight:700;">${entry.outcome}</span></td>
-          <td style="font-family:var(--font-mono);">${entry.composite_risk_score.toFixed(4)}</td>
-          <td style="font-family:var(--font-mono);">${orderText}</td>
-          <td style="font-family:var(--font-mono); font-size:0.65rem; color:#64748b;" title="SHA-256 Chained Hash: ${entry.node_hash}">
-            ${entry.node_hash.slice(0, 14)}...
-          </td>
+          <td class="mono">INR ${(entry.amount_paise/100).toFixed(2)}</td>
+          <td><span class="tactile-pill ${outcomeTag}">${entry.outcome}</span></td>
+          <td class="mono">${entry.composite_risk_score.toFixed(4)}</td>
+          <td class="mono">${orderText}</td>
+          <td><span class="hash-etched-pill" title="SHA-256 Block Hash: ${entry.node_hash}">${entry.node_hash.slice(0, 14)}...</span></td>
         `;
         tbody.appendChild(row);
       });
@@ -302,11 +322,11 @@ async function loadAuditLedger() {
   }
 }
 
-// 7. Track 02 Adversarial Benchmark Runner
+// 7. Adversarial Benchmark Runner
 async function executeBenchmark() {
   const btn = document.getElementById('runBenchmarkBtn');
   btn.disabled = true;
-  btn.innerHTML = `Running 1,000 Samples...`;
+  btn.innerHTML = `<span>Running 1,000 Samples...</span>`;
 
   try {
     const res = await fetch('/api/benchmark/run', {
@@ -320,7 +340,12 @@ async function executeBenchmark() {
     alert(`Benchmark execution failed: ${err.message}`);
   } finally {
     btn.disabled = false;
-    btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Run 1,000-Sample Benchmark`;
+    btn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="5 3 19 12 5 21 5 3"/>
+      </svg>
+      <span>Run 1,000-Sample Benchmark</span>
+    `;
   }
 }
 
@@ -358,49 +383,47 @@ function renderBenchmarkResults(results) {
 
   // Render per-class accuracy bars
   const container = document.getElementById('classAccuracyBars');
+  if (!container) return;
   container.innerHTML = '';
   for (const [className, stats] of Object.entries(results.class_breakdown)) {
     const formattedName = className.replace(/_/g, ' ');
     const bar = document.createElement('div');
-    bar.className = 'bar-item';
+    bar.className = 'acc-bar-row';
     bar.innerHTML = `
-      <div class="bar-meta">
-        <span>${formattedName} (${stats.total_samples} samples)</span>
-        <strong>${stats.accuracy}%</strong>
-      </div>
-      <div class="bar-track">
-        <div class="bar-fill" style="width: ${stats.accuracy}%;"></div>
-      </div>
+      <span class="acc-bar-label">${formattedName} (${stats.total_samples})</span>
+      <div class="acc-bar-track"><div class="acc-bar-fill" style="width: ${stats.accuracy}%;"></div></div>
+      <span class="acc-bar-pct">${stats.accuracy}%</span>
     `;
     container.appendChild(bar);
   }
 }
 
 function initCostChart() {
-  const ctx = document.getElementById('costBenefitChart')?.getContext('2d');
-  if (!ctx) return;
+  const canvas = document.getElementById('costBenefitChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
 
   costChart = new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: ['Attempted Fraud', 'Fraud Prevented', 'FP Review Cost', 'Net Benefit Saved'],
+      labels: ['Attempted Fraud', 'Fraud Prevented', 'FP Review Friction', 'Net Value Preserved'],
       datasets: [{
         label: 'Financial Impact (INR)',
         data: [693160, 692660, 0, 692660],
         backgroundColor: [
-          'rgba(255, 51, 102, 0.65)',
-          'rgba(0, 245, 155, 0.75)',
-          'rgba(255, 170, 0, 0.65)',
-          'rgba(0, 240, 255, 0.85)'
+          'rgba(239, 68, 68, 0.15)',
+          'rgba(16, 185, 129, 0.18)',
+          'rgba(245, 158, 11, 0.15)',
+          'rgba(15, 23, 42, 0.18)'
         ],
         borderColor: [
-          '#ff3366',
-          '#00f59b',
-          '#ffaa00',
-          '#00f0ff'
+          '#ef4444',
+          '#10b981',
+          '#f59e0b',
+          '#0f172a'
         ],
         borderWidth: 1.5,
-        borderRadius: 6
+        borderRadius: 4
       }]
     },
     options: {
@@ -416,12 +439,12 @@ function initCostChart() {
       },
       scales: {
         y: {
-          grid: { color: 'rgba(255, 255, 255, 0.05)' },
-          ticks: { color: '#94a3b8', font: { size: 10 } }
+          grid: { color: 'rgba(0, 0, 0, 0.05)' },
+          ticks: { color: '#64748b', font: { size: 10 } }
         },
         x: {
           grid: { display: false },
-          ticks: { color: '#94a3b8', font: { size: 10 } }
+          ticks: { color: '#64748b', font: { size: 10 } }
         }
       }
     }
@@ -443,15 +466,11 @@ function populateDefaultBenchmarkStats() {
   container.innerHTML = '';
   classes.forEach(c => {
     const bar = document.createElement('div');
-    bar.className = 'bar-item';
+    bar.className = 'acc-bar-row';
     bar.innerHTML = `
-      <div class="bar-meta">
-        <span>${c.name} (${c.total} samples)</span>
-        <strong>${c.acc}%</strong>
-      </div>
-      <div class="bar-track">
-        <div class="bar-fill" style="width: ${c.acc}%;"></div>
-      </div>
+      <span class="acc-bar-label">${c.name} (${c.total})</span>
+      <div class="acc-bar-track"><div class="acc-bar-fill" style="width: ${c.acc}%;"></div></div>
+      <span class="acc-bar-pct">${c.acc}%</span>
     `;
     container.appendChild(bar);
   });
